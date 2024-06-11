@@ -1,0 +1,49 @@
+version: '3'
+services:
+  thumbor:
+    image: apsl/thumbor
+    environment:
+      - SECURITY_KEY=ckLcCrDh4ApD1IIQn0i3s5GT1ERLetmO
+      - LOADER=thumbor.loaders.http_loader
+      - HTTP_LOADER_ROOT_PATH=http://minio:9000/demo-thumbor
+    ports:
+      - 8000:8000
+    networks:
+      - mynetwork
+  minio:
+    container_name: minio
+    image: minio/minio
+    volumes:
+      - minio-data:/export
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    networks:
+      - mynetwork
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_DEFAULT_BUCKETS: demo-thumbor  
+    command: server minio:/export
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+  # minio:
+  #   image: minio/minio
+  #   command: server /data
+  #   environment:
+  #     - MINIO_ACCESS_KEY=my-access-key
+  #     - MINIO_SECRET_KEY=my-secret-key
+  #   ports:
+  #     - 9000:9000
+
+
+networks:
+  mynetwork:
+    driver: bridge
+
+## For custom volumes replace with volume driver configuration.
+volumes:
+    minio-data:
